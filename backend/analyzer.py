@@ -96,6 +96,7 @@ Return ONLY the structured response matching the provided schema.
 
         except Exception as error:
             error_message = str(error)
+            print("GEMINI ERROR:", repr(error))
 
             if (
                 ("503" in error_message or "UNAVAILABLE" in error_message)
