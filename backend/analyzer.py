@@ -1,3 +1,5 @@
+import time
+
 from backend.gemini import client, MODEL_NAME
 from backend.schemas import SchemeAnalysis
 
@@ -19,7 +21,7 @@ IMPORTANT RULES:
 4. If a mandatory requirement is clearly not satisfied, mark the
    citizen as likely_not_eligible.
 5. If all known mandatory requirements are satisfied, mark the
-   citizen as likely_eligible.
+   result as likely_eligible.
 6. If a mandatory requirement cannot be evaluated because the
    citizen's information is missing, mark the result as
    cannot_determine.
@@ -77,13 +79,32 @@ Return:
 Return ONLY the structured response matching the provided schema.
 """
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "response_schema": SchemeAnalysis,
-        },
-    )
+    max_retries = 2
 
-    return SchemeAnalysis.model_validate_json(response.text)
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt,
+                config={
+                    "response_mime_type": "application/json",
+                    "response_schema": SchemeAnalysis,
+                },
+            )
+
+            return SchemeAnalysis.model_validate_json(response.text)
+
+        except Exception as error:
+            error_message = str(error)
+
+            if (
+                ("503" in error_message or "UNAVAILABLE" in error_message)
+                and attempt < max_retries
+            ):
+                time.sleep(2)
+                continue
+
+            raise RuntimeError(
+                "Scheme analysis is temporarily unavailable. "
+                "Please try again in a moment."
+            ) from error
