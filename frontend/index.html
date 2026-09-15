@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SchemeSarthi — AI Government Scheme Assistant</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sarthi: {
+              orange: "#ea580c",
+              green: "#15803d",
+              navy: "#1e293b"
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .drop-active {
+      border-color: #ea580c !important;
+      background: #fff7ed !important;
+    }
+
+    .loading {
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      50% {
+        opacity: .55;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+  <!-- HEADER -->
+  <header class="bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center text-2xl">
+          📋
+        </div>
+
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-extrabold">SchemeSarthi</h1>
+            <span class="text-[10px] font-bold uppercase tracking-wider bg-white/20 rounded-full px-2 py-1">
+              AI Assistant
+            </span>
+          </div>
+
+          <p class="text-orange-100 text-xs sm:text-sm">
+            Government scheme understanding, eligibility &amp; assistance
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-1.5 bg-black/10 p-1.5 rounded-xl">
+        <button id="nav1" onclick="showScreen(1)"
+          class="nav-btn px-3 py-1.5 rounded-lg bg-white text-orange-700 text-xs font-bold">
+          1. Input
+        </button>
+
+        <button id="nav2" onclick="showScreen(2)"
+          class="nav-btn px-3 py-1.5 rounded-lg text-white/90 text-xs font-semibold hover:bg-white/10">
+          2. Analysis
+        </button>
+
+        <button id="nav3" onclick="showScreen(3)"
+          class="nav-btn px-3 py-1.5 rounded-lg text-white/90 text-xs font-semibold hover:bg-white/10">
+          3. Profile
+        </button>
+
+        <button id="nav4" onclick="showScreen(4)"
+          class="nav-btn px-3 py-1.5 rounded-lg text-white/90 text-xs font-semibold hover:bg-white/10">
+          4. Result
+        </button>
+
+        <button onclick="resetApp()"
+          class="px-3 py-1.5 rounded-lg text-white/80 text-xs hover:bg-white/10">
+          ↺ Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="h-1 bg-emerald-600"></div>
+  </header>
+
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-7">
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- SIDEBAR -->
+      <aside class="lg:col-span-4 space-y-5">
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h2 class="font-bold text-sm mb-3">How SchemeSarthi Works</h2>
+
+          <div class="space-y-3 text-xs">
+
+            <div class="flex gap-3">
+              <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0">
+                1
+              </span>
+
+              <div>
+                <b>Provide a scheme</b>
+                <p class="text-slate-500 mt-0.5">
+                  Upload a PDF or paste scheme text.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0">
+                2
+              </span>
+
+              <div>
+                <b>AI understands it</b>
+                <p class="text-slate-500 mt-0.5">
+                  Extracts summary, benefits, rules, documents and steps.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0">
+                3
+              </span>
+
+              <div>
+                <b>Check your profile</b>
+                <p class="text-slate-500 mt-0.5">
+                  Compares your details against the supplied scheme information.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0">
+                4
+              </span>
+
+              <div>
+                <b>Understand the answer</b>
+                <p class="text-slate-500 mt-0.5">
+                  Shows reasons, missing information and evidence references.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <h2 class="font-bold text-sm mb-2">Input Status</h2>
+
+          <div class="text-xs text-slate-600 space-y-2">
+
+            <div class="flex justify-between">
+              <span>Input type</span>
+              <b id="side-input-type">Not selected</b>
+            </div>
+
+            <div class="flex justify-between">
+              <span>Language</span>
+              <b id="side-language">English</b>
+            </div>
+
+            <div class="flex justify-between">
+              <span>Backend</span>
+              <span class="text-emerald-700 font-bold">FastAPI</span>
+            </div>
+
+          </div>
+        </div>
+
+
+        <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-900">
+          <b>⚠️ Important</b>
+
+          <p class="mt-1">
+            This is an AI-assisted assessment, not an official government
+            eligibility decision. Verify details with the official scheme
+            authority before applying.
+          </p>
+        </div>
+
+      </aside>
+
+
+      <!-- MAIN -->
+      <section class="lg:col-span-8">
+
+
+        <!-- SCREEN 1 -->
+        <div id="screen-1" class="screen active space-y-5">
+
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-widest text-orange-600">
+                  Step 1
+                </p>
+
+                <h2 class="text-xl sm:text-2xl font-extrabold mt-1">
+                  Give SchemeSarthi a Government Scheme
+                </h2>
+
+                <p class="text-sm text-slate-500 mt-1">
+                  Use either a government scheme PDF or plain text.
+                </p>
+              </div>
+
+              <div class="flex gap-2">
+
+                <button id="pdf-tab"
+                  onclick="setInputMode('pdf')"
+                  class="mode-btn px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold">
+                  📄 PDF
+                </button>
+
+                <button id="text-tab"
+                  onclick="setInputMode('text')"
+                  class="mode-btn px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold">
+                  📝 Text
+                </button>
+
+              </div>
+            </div>
+
+
+            <!-- PDF INPUT -->
+            <div id="pdf-mode">
+
+              <label id="drop-zone"
+                for="pdf-input"
+                class="block border-2 border-dashed border-orange-300 rounded-2xl p-8 sm:p-10 text-center bg-orange-50/40 hover:bg-orange-50 cursor-pointer transition">
+
+                <input
+                  id="pdf-input"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  class="hidden">
+
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl">
+                  📄
+                </div>
+
+                <div class="mt-3 text-base font-bold">
+                  Drag &amp; drop your PDF here
+                </div>
+
+                <div class="text-xs text-slate-500 mt-1">
+                  or
+                  <span class="text-orange-600 font-bold underline">
+                    click to browse
+                  </span>
+                </div>
+
+                <div class="text-[11px] text-slate-400 mt-2">
+                  PDF files only • recommended limit: 10 MB
+                </div>
+
+                <div
+                  id="file-pill"
+                  class="hidden inline-flex items-center gap-2 bg-white border border-orange-200 rounded-xl px-3 py-2 mt-5 text-left">
+
+                  <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold">
+                    PDF
+                  </span>
+
+                  <span id="file-name"
+                    class="text-xs font-semibold max-w-[260px] truncate">
+                  </span>
+
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    Ready
+                  </span>
+
+                </div>
+
+              </label>
+
+            </div>
+
+
+            <!-- TEXT INPUT -->
+            <div id="text-mode" class="hidden">
+
+              <label class="block text-xs font-bold text-slate-700 mb-2">
+                Paste scheme text
+              </label>
+
+              <textarea
+                id="scheme-text"
+                rows="14"
+                class="w-full rounded-2xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 p-4 text-sm leading-6"
+                placeholder="Paste the government scheme notification, eligibility criteria, benefits, required documents and application procedure here..."></textarea>
+
+              <p class="text-[11px] text-slate-400 mt-2">
+                Tip: Include headings or page/section markers if available
+                so evidence can be referenced more precisely.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <!-- LANGUAGE -->
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+            <h3 class="font-bold text-sm">
+              Preferred Language
+            </h3>
+
+            <p class="text-xs text-slate-500 mt-1 mb-4">
+              Your scheme results can be translated into an Indian language.
+            </p>
+
+            <div id="language-list" class="flex flex-wrap gap-2">
+
+              <button
+                data-lang="English"
+                onclick="selectLanguage(this)"
+                class="lang-btn px-4 py-2 rounded-full bg-orange-600 text-white text-xs font-bold">
+                ✓ English
+              </button>
+
+              <button
+                data-lang="Hindi"
+                onclick="selectLanguage(this)"
+                class="lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold">
+                हिंदी
+              </button>
+
+              <button
+                data-lang="Telugu"
+                onclick="selectLanguage(this)"
+                class="lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold">
+                తెలుగు
+              </button>
+
+              <button
+                data-lang="Tamil"
+                onclick="selectLanguage(this)"
+                class="lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold">
+                தமிழ்
+              </button>
+
+              <button
+                data-lang="Kannada"
+                onclick="selectLanguage(this)"
+                class="lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold">
+                ಕನ್ನಡ
+              </button>
+
+              <button
+                data-lang="Malayalam"
+                onclick="selectLanguage(this)"
+                class="lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold">
+                മലയാളം
+              </button>
+
+            </div>
+          </div>
+
+
+          <button
+            id="analyze-btn"
+            onclick="startAnalysis()"
+            class="w-full py-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-extrabold shadow-lg transition">
+
+            🚀 Analyze Scheme with AI
+
+          </button>
+
+
+          <div class="bg-slate-100 border border-slate-200 rounded-2xl p-5">
+
+            <h3 class="font-bold text-sm">
+              What you'll get
+            </h3>
+
+            <div class="grid sm:grid-cols-2 gap-3 mt-3 text-xs">
+
+              <div class="bg-white rounded-xl p-3 border border-slate-200">
+                📌 Simple scheme summary
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-slate-200">
+                ✅ Personalized eligibility
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-slate-200">
+                🎁 Benefits
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-slate-200">
+                📑 Required documents
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-slate-200">
+                🪜 Application steps
+              </div>
+
+              <div class="bg-white rounded-xl p-3 border border-slate-200">
+                🔎 Evidence/source references
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+
+        <!-- SCREEN 2 -->
+        <div id="screen-2" class="screen space-y-5">
+
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+
+            <div class="flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
+
+              <div>
+
+                <p class="text-[11px] font-bold uppercase tracking-widest text-orange-600">
+                  Step 2
+                </p>
+
+                <h2
+                  id="analysis-title"
+                  class="text-xl sm:text-2xl font-extrabold mt-1">
+                  Scheme Analysis
+                </h2>
+
+                <p
+                  id="analysis-summary"
+                  class="text-sm text-slate-600 mt-2">
+                </p>
+
+              </div>
+
+              <button
+                onclick="showScreen(1)"
+                class="text-xs font-bold text-slate-500 hover:text-slate-900">
+                ← Change input
+              </button>
+
+            </div>
+
+
+            <div class="grid sm:grid-cols-3 gap-3 mt-5">
+
+              <div class="rounded-xl bg-orange-50 border border-orange-200 p-4">
+                <div
+                  class="text-2xl font-black text-orange-600"
+                  id="benefit-count">
+                  0
+                </div>
+                <div class="text-xs font-semibold text-slate-600">
+                  Benefits
+                </div>
+              </div>
+
+              <div class="rounded-xl bg-blue-50 border border-blue-200 p-4">
+                <div
+                  class="text-2xl font-black text-blue-600"
+                  id="document-count">
+                  0
+                </div>
+                <div class="text-xs font-semibold text-slate-600">
+                  Documents
+                </div>
+              </div>
+
+              <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+                <div
+                  class="text-2xl font-black text-emerald-600"
+                  id="evidence-count">
+                  0
+                </div>
+                <div class="text-xs font-semibold text-slate-600">
+                  Evidence references
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="grid md:grid-cols-2 gap-5">
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-5">
+
+              <h3 class="font-bold text-sm mb-3">
+                🎁 Benefits
+              </h3>
+
+              <ul
+                id="benefits-list"
+                class="space-y-2 text-sm">
+              </ul>
+
+            </div>
+
+
+            <div class="bg-white border border-slate-200 rounded-2xl p-5">
+
+              <h3 class="font-bold text-sm mb-3">
+                📑 Required Documents
+              </h3>
+
+              <ul
+                id="documents-list"
+                class="space-y-2 text-sm">
+              </ul>
+
+            </div>
+
+          </div>
+
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-5">
+
+            <h3 class="font-bold text-sm mb-3">
+              🪜 Application Steps
+            </h3>
+
+            <ol
+              id="steps-list"
+              class="space-y-3 text-sm">
+            </ol>
+
+          </div>
+
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-5">
+
+            <h3 class="font-bold text-sm mb-3">
+              🔎 Evidence / Source References
+            </h3>
+
+            <div
+              id="evidence-list"
+              class="space-y-3">
+            </div>
+
+          </div>
+
+
+          <button
+            onclick="showScreen(3)"
+            class="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm">
+
+            Continue → Check My Eligibility
+
+          </button>
+
+        </div>
+
+
+        <!-- SCREEN 3 -->
+        <div id="screen-3" class="screen">
+
+          <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8">
+
+            <p class="text-[11px] font-bold uppercase tracking-widest text-orange-600 text-center">
+              Step 3
+            </p>
+
+            <h2 class="text-xl sm:text-2xl font-extrabold text-center mt-1">
+              Check Your Eligibility
+            </h2>
+
+            <p class="text-sm text-slate-500 text-center mt-2 max-w-xl mx-auto">
+              Enter the information you want SchemeSarthi to compare against the scheme.
+            </p>
+
+
+            <div class="max-w-xl mx-auto space-y-5 mt-7">
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1.5">
+                  Age
+                </label>
+
+                <input
+                  id="input-age"
+                  type="number"
+                  min="0"
+                  class="w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-orange-500 p-3 text-sm"
+                  placeholder="e.g. 24">
+              </div>
+
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1.5">
+                  State / Domicile
+                </label>
+
+                <input
+                  id="input-state"
+                  type="text"
+                  class="w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-orange-500 p-3 text-sm"
+                  placeholder="e.g. Telangana">
+              </div>
+
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-1.5">
+                  Annual Household Income
+                </label>
+
+                <input
+                  id="input-income"
+                  type="number"
+                  min="0"
+                  class="w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-orange-500 p-3 text-sm"
+                  placeholder="e.g. 180000">
+              </div>
+
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2">
+                  Other information / certificates
+                </label>
+
+                <textarea
+                  id="input-extra"
+                  rows="5"
+                  class="w-full rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-orange-500 p-3 text-sm"
+                  placeholder="Example: I have Aadhaar, residence proof and an income certificate. I am a farmer. I am a student.">
+                </textarea>
+              </div>
+
+
+              <div class="flex items-center justify-between gap-3 pt-4 border-t border-slate-200">
+
+                <button
+                  onclick="showScreen(2)"
+                  class="text-xs font-bold text-slate-500">
+                  ← Back
+                </button>
+
+                <button
+                  id="eligibility-btn"
+                  onclick="runEligibility()"
+                  class="px-6 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm">
+
+                  Check Eligibility →
+
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SCREEN 4 -->
+        <div id="screen-4" class="screen space-y-5">
+
+          <div
+            id="result-card"
+            class="bg-white border-2 rounded-2xl p-7 text-center shadow-sm">
+
+            <div
+              id="result-icon"
+              class="w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black mb-3">
+              ?
+            </div>
+
+            <p
+              class="text-[11px] font-bold uppercase tracking-widest"
+              id="result-label">
+              Eligibility assessment
+            </p>
+
+            <h2 class="text-2xl sm:text-3xl font-extrabold mt-1">
+              <span id="result-status">—</span>
+            </h2>
+
+            <p class="text-sm text-slate-600 max-w-2xl mx-auto mt-3">
+              This assessment is based on the supplied scheme content and citizen profile.
+            </p>
+
+          </div>
+
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-6">
+
+            <h3 class="font-bold text-sm mb-4">
+              Why?
+            </h3>
+
+            <ul
+              id="reasons-list"
+              class="space-y-3 text-sm">
+            </ul>
+
+          </div>
+
+
+          <div
+            id="missing-box"
+            class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-6">
+
+            <h3 class="font-bold text-amber-900 text-sm">
+              ⚠️ Missing Information
+            </h3>
+
+            <ul
+              id="missing-list"
+              class="mt-3 space-y-2 text-sm text-amber-900">
+            </ul>
+
+          </div>
+
+
+          <div class="grid sm:grid-cols-2 gap-4">
+
+            <button
+              onclick="showScreen(2)"
+              class="p-5 rounded-2xl bg-slate-900 text-white text-left hover:bg-slate-800">
+
+              <div class="text-xs font-bold uppercase tracking-wider text-orange-300">
+                Scheme understanding
+              </div>
+
+              <div class="font-bold mt-1">
+                Review Benefits &amp; Documents →
+              </div>
+
+            </button>
+
+
+            <button
+              onclick="showScreen(1)"
+              class="p-5 rounded-2xl bg-white border-2 border-orange-200 text-left hover:border-orange-400">
+
+              <div class="text-xs font-bold uppercase tracking-wider text-orange-700">
+                Start again
+              </div>
+
+              <div class="font-bold mt-1">
+                Analyze Another Scheme →
+              </div>
+
+            </button>
+
+          </div>
+
+
+          <div class="bg-white border border-slate-200 rounded-2xl p-5">
+
+            <h3 class="font-bold text-sm mb-3">
+              🔎 Evidence supporting the assessment
+            </h3>
+
+            <div
+              id="result-evidence"
+              class="space-y-3">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- ERROR -->
+        <div
+          id="error-box"
+          class="hidden mt-5 bg-red-50 border border-red-200 rounded-2xl p-5 text-sm text-red-800">
+
+          <b>Something went wrong.</b>
+
+          <p
+            id="error-message"
+            class="mt-1">
+          </p>
+
+        </div>
+
+      </section>
+    </div>
+
+  </main>
+
+
+  <footer class="border-t border-slate-200 bg-white py-5 text-center text-xs text-slate-500">
+
+    <b class="text-slate-800">
+      SchemeSarthi
+    </b>
+
+    — AI-powered government scheme understanding &amp; eligibility assistant
+
+  </footer>
+
+
+<script>
+
+  /* =========================================================
+     CONFIG
+  ========================================================= */
+
+  const API_BASE = "http://127.0.0.1:8000";
+
+
+  /* =========================================================
+     STATE
+  ========================================================= */
+
+  let inputMode = "pdf";
+  let selectedLanguage = "English";
+  let selectedPdfFile = null;
+  let analysis = null;
+
+
+  /* =========================================================
+     SCREEN NAVIGATION
+  ========================================================= */
+
+  function showScreen(number) {
+
+    document
+      .querySelectorAll(".screen")
+      .forEach(el => el.classList.remove("active"));
+
+    const target = document.getElementById("screen-" + number);
+
+    if (target) {
+      target.classList.add("active");
+    }
+
+
+    document
+      .querySelectorAll(".nav-btn")
+      .forEach(btn => {
+
+        btn.classList.remove(
+          "bg-white",
+          "text-orange-700",
+          "font-bold"
+        );
+
+        btn.classList.add("text-white/90");
+
+      });
+
+
+    const active = document.getElementById("nav" + number);
+
+    if (active) {
+
+      active.classList.add(
+        "bg-white",
+        "text-orange-700",
+        "font-bold"
+      );
+
+      active.classList.remove("text-white/90");
+
+    }
+
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  }
+
+
+  /* =========================================================
+     INPUT MODE
+  ========================================================= */
+
+  function setInputMode(mode) {
+
+    inputMode = mode;
+
+    const pdfMode = document.getElementById("pdf-mode");
+    const textMode = document.getElementById("text-mode");
+
+    const pdfTab = document.getElementById("pdf-tab");
+    const textTab = document.getElementById("text-tab");
+
+
+    if (mode === "pdf") {
+
+      pdfMode.classList.remove("hidden");
+      textMode.classList.add("hidden");
+
+      pdfTab.className =
+        "mode-btn px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold";
+
+      textTab.className =
+        "mode-btn px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold";
+
+    } else {
+
+      pdfMode.classList.add("hidden");
+      textMode.classList.remove("hidden");
+
+      pdfTab.className =
+        "mode-btn px-4 py-2 rounded-xl border border-slate-300 bg-white text-slate-700 text-xs font-bold";
+
+      textTab.className =
+        "mode-btn px-4 py-2 rounded-xl bg-orange-600 text-white text-xs font-bold";
+
+    }
+
+
+    document.getElementById("side-input-type").textContent =
+      mode === "pdf" ? "PDF" : "Text";
+
+  }
+
+
+  /* =========================================================
+     LANGUAGE
+  ========================================================= */
+
+  function selectLanguage(button) {
+
+    selectedLanguage = button.dataset.lang;
+
+
+    document
+      .querySelectorAll(".lang-btn")
+      .forEach(btn => {
+
+        btn.className =
+          "lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold";
+
+        const originalText = btn.dataset.label || btn.textContent;
+
+        btn.dataset.label = originalText.replace(/^✓\s*/, "");
+
+        btn.textContent = btn.dataset.label;
+
+      });
+
+
+    button.className =
+      "lang-btn px-4 py-2 rounded-full bg-orange-600 text-white text-xs font-bold";
+
+    button.textContent = "✓ " + button.dataset.lang;
+
+
+    document.getElementById("side-language").textContent =
+      selectedLanguage;
+
+  }
+
+
+  /* =========================================================
+     PDF INPUT
+  ========================================================= */
+
+  document
+    .getElementById("pdf-input")
+    .addEventListener("change", function(event) {
+
+      const file = event.target.files[0];
+
+      if (!file) {
+        return;
+      }
+
+
+      if (
+        file.type !== "application/pdf" &&
+        !file.name.toLowerCase().endsWith(".pdf")
+      ) {
+
+        showError("Please select a PDF file.");
+
+        event.target.value = "";
+
+        return;
+      }
+
+
+      selectedPdfFile = file;
+
+      document.getElementById("file-name").textContent =
+        file.name;
+
+      document
+        .getElementById("file-pill")
+        .classList.remove("hidden");
+
+      document
+        .getElementById("side-input-type")
+        .textContent = "PDF";
+
+      hideError();
+
+    });
+
+
+  const dropZone = document.getElementById("drop-zone");
+
+
+  ["dragenter", "dragover"].forEach(type => {
+
+    dropZone.addEventListener(type, e => {
+
+      e.preventDefault();
+
+      dropZone.classList.add("drop-active");
+
+    });
+
+  });
+
+
+  ["dragleave", "drop"].forEach(type => {
+
+    dropZone.addEventListener(type, e => {
+
+      e.preventDefault();
+
+      dropZone.classList.remove("drop-active");
+
+    });
+
+  });
+
+
+  dropZone.addEventListener("drop", e => {
+
+    const file = e.dataTransfer.files[0];
+
+    if (!file) {
+      return;
+    }
+
+
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+
+      showError("Please drop a PDF file.");
+
+      return;
+    }
+
+
+    selectedPdfFile = file;
+
+    document.getElementById("pdf-input").files =
+      e.dataTransfer.files;
+
+    document.getElementById("file-name").textContent =
+      file.name;
+
+    document
+      .getElementById("file-pill")
+      .classList.remove("hidden");
+
+    document
+      .getElementById("side-input-type")
+      .textContent = "PDF";
+
+    hideError();
+
+  });
+
+
+  /* =========================================================
+     PROFILE
+  ========================================================= */
+
+  function profileObject() {
+
+    const ageValue =
+      document.getElementById("input-age").value.trim();
+
+    const stateValue =
+      document.getElementById("input-state").value.trim();
+
+    const incomeValue =
+      document.getElementById("input-income").value.trim();
+
+    const extraValue =
+      document.getElementById("input-extra").value.trim();
+
+
+    return {
+
+      age: ageValue
+        ? Number(ageValue)
+        : null,
+
+      state: stateValue
+        ? stateValue
+        : null,
+
+      annual_income: incomeValue
+        ? Number(incomeValue)
+        : null,
+
+      language: selectedLanguage,
+
+      additional_information: extraValue
+        ? extraValue
+        : null
+
+    };
+
+  }
+
+
+  /* =========================================================
+     SARVAM TRANSLATION
+  ========================================================= */
+
+  async function translateText(text) {
+
+    if (
+      !text ||
+      !text.trim() ||
+      selectedLanguage === "English"
+    ) {
+
+      return text;
+
+    }
+
+
+    const formData = new FormData();
+
+    formData.append(
+      "text",
+      text
+    );
+
+    formData.append(
+      "target_language",
+      selectedLanguage
+    );
+
+
+    const response = await fetch(
+      API_BASE + "/translate",
+      {
+        method: "POST",
+        body: formData
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.detail || "Translation failed."
+      );
+
+    }
+
+
+    return data.translated_text;
+
+  }
+
+
+  async function translateAnalysis(data) {
+
+    if (selectedLanguage === "English") {
+      return data;
+    }
+
+
+    const translated = {
+      ...data,
+
+      scheme_name:
+        await translateText(data.scheme_name),
+
+      summary:
+        await translateText(data.summary),
+
+      benefits:
+        await Promise.all(
+          (data.benefits || [])
+            .map(item => translateText(item))
+        ),
+
+      documents:
+        await Promise.all(
+          (data.documents || [])
+            .map(item => translateText(item))
+        ),
+
+      application_steps:
+        await Promise.all(
+          (data.application_steps || [])
+            .map(item => translateText(item))
+        ),
+
+      eligibility: {
+
+        ...data.eligibility,
+
+        reasons:
+          await Promise.all(
+            (data.eligibility?.reasons || [])
+              .map(item => translateText(item))
+          ),
+
+        missing_information:
+          await Promise.all(
+            (data.eligibility?.missing_information || [])
+              .map(item => translateText(item))
+          )
+
+      },
+
+      evidence:
+        await Promise.all(
+          (data.evidence || [])
+            .map(async item => ({
+
+              ...item,
+
+              claim:
+                await translateText(item.claim),
+
+              source:
+                await translateText(item.source)
+
+            }))
+        )
+
+    };
+
+
+    return translated;
+
+  }
+
+
+  /* =========================================================
+     ANALYZE SCHEME
+  ========================================================= */
+
+  async function startAnalysis() {
+
+    hideError();
+
+
+    if (
+      inputMode === "pdf" &&
+      !selectedPdfFile
+    ) {
+
+      showError(
+        "Please upload a government scheme PDF first."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      inputMode === "text" &&
+      !document
+        .getElementById("scheme-text")
+        .value
+        .trim()
+    ) {
+
+      showError(
+        "Please paste the scheme text first."
+      );
+
+      return;
+
+    }
+
+
+    const btn =
+      document.getElementById("analyze-btn");
+
+
+    btn.disabled = true;
+
+    btn.classList.add("loading");
+
+
+    try {
+
+      btn.textContent =
+        "⏳ Analyzing scheme with Gemini...";
+
+
+      const formData =
+        new FormData();
+
+
+      formData.append(
+        "user_profile",
+        JSON.stringify(profileObject())
+      );
+
+
+      let response;
+
+
+      if (inputMode === "pdf") {
+
+        formData.append(
+          "file",
+          selectedPdfFile
+        );
+
+
+        response = await fetch(
+          API_BASE + "/analyze/pdf",
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+      } else {
+
+        formData.append(
+          "text",
+          document
+            .getElementById("scheme-text")
+            .value
+            .trim()
+        );
+
+
+        response = await fetch(
+          API_BASE + "/analyze/text",
+          {
+            method: "POST",
+            body: formData
+          }
+        );
+
+      }
+
+
+      let data =
+  await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.detail ||
+          "The backend returned an error."
+        );
+
+      }
+
+
+      /*
+        IMPORTANT:
+
+        Gemini has already analyzed the citizen profile
+        and returned the eligibility result.
+
+        We DO NOT call Gemini again.
+      */
+
+
+      if (selectedLanguage !== "English") {
+
+        btn.textContent =
+          "🌐 Translating with Sarvam...";
+
+
+        data =
+          await translateAnalysis(data);
+
+      }
+
+
+      analysis = data;
+
+
+      renderAnalysis(data);
+
+
+      showScreen(2);
+
+    } catch (error) {
+
+      showError(
+        "Could not analyze the scheme. " +
+        "Make sure the FastAPI server is running at " +
+        API_BASE +
+        ". Details: " +
+        error.message
+      );
+
+    } finally {
+
+      btn.disabled = false;
+
+      btn.classList.remove("loading");
+
+      btn.textContent =
+        "🚀 Analyze Scheme with AI";
+
+    }
+
+  }
+
+
+  /* =========================================================
+     RENDER ANALYSIS
+  ========================================================= */
+
+  function renderAnalysis(data) {
+
+    document.getElementById("analysis-title").textContent =
+      data.scheme_name ||
+      "Government Scheme";
+
+
+    document.getElementById("analysis-summary").textContent =
+      data.summary ||
+      "No summary was returned.";
+
+
+    const benefits =
+      Array.isArray(data.benefits)
+        ? data.benefits
+        : [];
+
+
+    const documents =
+      Array.isArray(data.documents)
+        ? data.documents
+        : [];
+
+
+    const steps =
+      Array.isArray(data.application_steps)
+        ? data.application_steps
+        : [];
+
+
+    const evidence =
+      Array.isArray(data.evidence)
+        ? data.evidence
+        : [];
+
+
+    document.getElementById("benefit-count").textContent =
+      benefits.length;
+
+
+    document.getElementById("document-count").textContent =
+      documents.length;
+
+
+    document.getElementById("evidence-count").textContent =
+      evidence.length;
+
+
+    document.getElementById("benefits-list").innerHTML =
+      benefits.length
+
+        ? benefits
+            .map(
+              x =>
+                `<li class="flex gap-2">
+                  <span class="text-emerald-600">✓</span>
+                  <span>${escapeHtml(x)}</span>
+                </li>`
+            )
+            .join("")
+
+        : emptyState(
+            "No benefits were extracted."
+          );
+
+
+    document.getElementById("documents-list").innerHTML =
+      documents.length
+
+        ? documents
+            .map(
+              x =>
+                `<li class="flex gap-2">
+                  <span class="text-orange-600">📄</span>
+                  <span>${escapeHtml(x)}</span>
+                </li>`
+            )
+            .join("")
+
+        : emptyState(
+            "No documents were extracted."
+          );
+
+
+    document.getElementById("steps-list").innerHTML =
+      steps.length
+
+        ? steps
+            .map(
+              (x, i) =>
+                `<li class="flex gap-3">
+                  <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 font-bold flex items-center justify-center shrink-0">
+                    ${i + 1}
+                  </span>
+                  <span>${escapeHtml(x)}</span>
+                </li>`
+            )
+            .join("")
+
+        : emptyState(
+            "No application steps were extracted."
+          );
+
+
+    document.getElementById("evidence-list").innerHTML =
+      evidence.length
+
+        ? evidence
+            .map(
+              ev =>
+                `<div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+
+                  <div class="text-sm font-semibold">
+                    ${escapeHtml(
+                      ev.claim || "Claim"
+                    )}
+                  </div>
+
+                  <div class="text-xs text-orange-700 font-bold mt-1">
+                    Source:
+                    ${escapeHtml(
+                      ev.source || "Not specified"
+                    )}
+                  </div>
+
+                </div>`
+            )
+            .join("")
+
+        : emptyState(
+            "No evidence references were returned."
+          );
+
+  }
+
+
+  /* =========================================================
+     ELIGIBILITY
+  ========================================================= */
+
+  function runEligibility() {
+
+    hideError();
+
+
+    if (!analysis) {
+
+      showError(
+        "Please analyze a scheme before checking eligibility."
+      );
+
+      showScreen(1);
+
+      return;
+
+    }
+
+
+    /*
+      IMPORTANT:
+
+      Eligibility was already calculated by Gemini
+      during the original analysis call.
+
+      We simply display the stored result.
+
+      This prevents a second Gemini API request.
+    */
+
+
+    renderResult(analysis);
+
+    showScreen(4);
+
+  }
+
+
+  /* =========================================================
+     RENDER ELIGIBILITY RESULT
+  ========================================================= */
+
+  function renderResult(data) {
+
+    const eligibility =
+      data.eligibility || {};
+
+
+    const status =
+      eligibility.status ||
+      "cannot_determine";
+
+
+    const labels = {
+
+      likely_eligible:
+        "LIKELY ELIGIBLE",
+
+      likely_not_eligible:
+        "LIKELY NOT ELIGIBLE",
+
+      cannot_determine:
+        "CANNOT DETERMINE"
+
+    };
+
+
+    const classes = {
+
+      likely_eligible:
+        [
+          "border-emerald-300",
+          "bg-emerald-50",
+          "text-emerald-700"
+        ],
+
+      likely_not_eligible:
+        [
+          "border-red-300",
+          "bg-red-50",
+          "text-red-700"
+        ],
+
+      cannot_determine:
+        [
+          "border-amber-300",
+          "bg-amber-50",
+          "text-amber-700"
+        ]
+
+    };
+
+
+    const currentClasses =
+      classes[status] ||
+      classes.cannot_determine;
+
+
+    const card =
+      document.getElementById(
+        "result-card"
+      );
+
+
+    card.className =
+      "border-2 rounded-2xl p-7 text-center shadow-sm " +
+      currentClasses.join(" ");
+
+
+    const icon =
+      document.getElementById(
+        "result-icon"
+      );
+
+
+    icon.className =
+      "w-14 h-14 mx-auto rounded-2xl flex items-center justify-center text-2xl font-black mb-3 " +
+      currentClasses[1] +
+      " " +
+      currentClasses[2];
+
+
+    icon.textContent =
+      status === "likely_eligible"
+        ? "✓"
+        : status === "likely_not_eligible"
+          ? "!"
+          : "?";
+
+
+    document.getElementById(
+      "result-label"
+    ).className =
+      "text-[11px] font-bold uppercase tracking-widest " +
+      currentClasses[2];
+
+
+    document.getElementById(
+      "result-status"
+    ).className =
+      "font-extrabold " +
+      currentClasses[2];
+
+
+    document.getElementById(
+      "result-status"
+    ).textContent =
+      labels[status] ||
+      status;
+
+
+    const reasons =
+      Array.isArray(
+        eligibility.reasons
+      )
+        ? eligibility.reasons
+        : [];
+
+
+    document.getElementById(
+      "reasons-list"
+    ).innerHTML =
+
+      reasons.length
+
+        ? reasons
+            .map(
+              r =>
+                `<li class="flex gap-3">
+                  <span class="mt-0.5 text-orange-600">
+                    ●
+                  </span>
+
+                  <span>
+                    ${escapeHtml(r)}
+                  </span>
+                </li>`
+            )
+            .join("")
+
+        : emptyState(
+            "No specific reasons were returned."
+          );
+
+
+    const missing =
+      Array.isArray(
+        eligibility.missing_information
+      )
+        ? eligibility.missing_information
+        : [];
+
+
+    const missingBox =
+      document.getElementById(
+        "missing-box"
+      );
+
+
+    if (missing.length) {
+
+      missingBox.classList.remove(
+        "hidden"
+      );
+
+
+      document.getElementById(
+        "missing-list"
+      ).innerHTML =
+
+        missing
+          .map(
+            x =>
+              `<li>
+                • ${escapeHtml(x)}
+              </li>`
+          )
+          .join("");
+
+    } else {
+
+      missingBox.classList.add(
+        "hidden"
+      );
+
+    }
+
+
+    const evidence =
+      Array.isArray(data.evidence)
+        ? data.evidence
+        : [];
+
+
+    document.getElementById(
+      "result-evidence"
+    ).innerHTML =
+
+      evidence.length
+
+        ? evidence
+            .map(
+              ev =>
+                `<div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+
+                  <div class="font-semibold text-sm">
+                    ${escapeHtml(
+                      ev.claim || ""
+                    )}
+                  </div>
+
+                  <div class="text-xs text-orange-700 font-bold mt-1">
+                    Source:
+                    ${escapeHtml(
+                      ev.source ||
+                      "Not specified"
+                    )}
+                  </div>
+
+                </div>`
+            )
+            .join("")
+
+        : emptyState(
+            "No evidence references were returned."
+          );
+
+  }
+
+
+  /* =========================================================
+     SECURITY / HELPERS
+  ========================================================= */
+
+  function escapeHtml(value) {
+
+    return String(value ?? "")
+
+      .replaceAll(
+        "&",
+        "&amp;"
+      )
+
+      .replaceAll(
+        "<",
+        "&lt;"
+      )
+
+      .replaceAll(
+        ">",
+        "&gt;"
+      )
+
+      .replaceAll(
+        '"',
+        "&quot;"
+      )
+
+      .replaceAll(
+        "'",
+        "&#039;"
+      );
+
+  }
+
+
+  function emptyState(text) {
+
+    return `
+      <div class="text-sm text-slate-400">
+        ${escapeHtml(text)}
+      </div>
+    `;
+
+  }
+
+
+  function showError(message) {
+
+    const box =
+      document.getElementById(
+        "error-box"
+      );
+
+
+    document.getElementById(
+      "error-message"
+    ).textContent =
+      message;
+
+
+    box.classList.remove(
+      "hidden"
+    );
+
+
+    box.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+  }
+
+
+  function hideError() {
+
+    document
+      .getElementById("error-box")
+      .classList.add("hidden");
+
+  }
+
+
+  /* =========================================================
+     RESET
+  ========================================================= */
+
+  function resetApp() {
+
+    selectedPdfFile = null;
+
+    analysis = null;
+
+    selectedLanguage = "English";
+
+    inputMode = "pdf";
+
+
+    document.getElementById(
+      "pdf-input"
+    ).value = "";
+
+
+    document.getElementById(
+      "scheme-text"
+    ).value = "";
+
+
+    document.getElementById(
+      "file-name"
+    ).textContent = "";
+
+
+    document.getElementById(
+      "file-pill"
+    ).classList.add("hidden");
+
+
+    document.getElementById(
+      "input-age"
+    ).value = "";
+
+
+    document.getElementById(
+      "input-state"
+    ).value = "";
+
+
+    document.getElementById(
+      "input-income"
+    ).value = "";
+
+
+    document.getElementById(
+      "input-extra"
+    ).value = "";
+
+
+    setInputMode("pdf");
+
+
+    document
+      .querySelectorAll(".lang-btn")
+      .forEach(btn => {
+
+        btn.className =
+          "lang-btn px-4 py-2 rounded-full border border-slate-300 text-slate-700 text-xs font-semibold";
+
+
+        if (
+          btn.dataset.lang === "English"
+        ) {
+
+          btn.className =
+            "lang-btn px-4 py-2 rounded-full bg-orange-600 text-white text-xs font-bold";
+
+          btn.textContent =
+            "✓ English";
+
+        }
+
+      });
+
+
+    document.getElementById(
+      "side-language"
+    ).textContent =
+      "English";
+
+
+    document.getElementById(
+      "side-input-type"
+    ).textContent =
+      "Not selected";
+
+
+    hideError();
+
+    showScreen(1);
+
+  }
+
+
+  /* =========================================================
+     START
+  ========================================================= */
+
+  showScreen(1);
+
+</script>
+
+</body>
+</html>

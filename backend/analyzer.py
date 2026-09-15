@@ -1,8 +1,22 @@
+import json
+import os
 import time
 
-from backend.gemini import client, MODEL_NAME
+from dotenv import load_dotenv
+from sarvamai import SarvamAI
+
 from backend.schemas import SchemeAnalysis
 
+load_dotenv()
+
+API_KEY = os.getenv("SARVAM_API_KEY")
+
+if not API_KEY:
+    raise ValueError("SARVAM_API_KEY is not set in .env")
+
+client = SarvamAI(api_subscription_key=API_KEY)
+
+MODEL_NAME = "sarvam-105b"
 
 SYSTEM_PROMPT = """
 You are SchemeSarthi, an AI assistant that helps Indian citizens
@@ -36,10 +50,7 @@ IMPORTANT RULES:
 """
 
 
-def analyze_scheme(
-    scheme_text: str,
-    user_profile: dict
-) -> SchemeAnalysis:
+def analyze_scheme(scheme_text: str, user_profile: dict) -> SchemeAnalysis:
 
     prompt = f"""
 {SYSTEM_PROMPT}
@@ -50,13 +61,11 @@ GOVERNMENT SCHEME DOCUMENT
 
 {scheme_text}
 
-
 ====================
 CITIZEN PROFILE
 ====================
 
-{user_profile}
-
+{json.dumps(user_profile, ensure_ascii=False, indent=2)}
 
 ====================
 TASK
@@ -64,45 +73,102 @@ TASK
 
 Analyze the scheme for this citizen.
 
-Return:
+Populate EVERY field in the output schema whenever the
+information is available in the scheme document.
 
-- Scheme name
-- Simple summary
-- Eligibility status
-- Clear reasons for the eligibility decision
-- Missing information, if any
-- Benefits
-- Required documents
-- Application steps
-- Evidence/source references for important claims
+Requirements:
 
-Return ONLY the structured response matching the provided schema.
-"""
+- scheme_name:
+  Extract the official scheme name.
 
-    max_retries = 2
+- summary:
+  Give a short, simple citizen-friendly explanation.
 
-    for attempt in range(max_retries + 1):
+- eligibility:
+  Determine whether the citizen is likely eligible,
+  likely not eligible, or whether eligibility cannot be
+  determined.
+
+- benefits:
+  MUST contain every benefit explicitly stated in the
+  scheme document. Do not leave this empty if benefits
+  are present in the document.
+
+- documents:
+  MUST contain every required document explicitly stated
+  in the scheme document. Do not leave this empty if
+  documents are present.
+
+- application_steps:
+  MUST contain the application procedure explicitly
+  stated in the scheme document. Include all important
+  steps available in the document.
+
+- evidence:
+  Provide evidence/source references for important claims.
+  Use the page number or section name from the supplied
+  document whenever available.
+
+IMPORTANT:
+
+Never move information that belongs in benefits,
+documents, or application_steps into evidence instead.
+Those fields must contain the actual extracted information.
+
+Only leave a field empty when that information is genuinely
+not present in the scheme document.
+
+Do not invent information.
+
+Return ONLY the JSON object matching the required schema."""
+
+    schema = SchemeAnalysis.model_json_schema()
+
+    for attempt in range(3):
         try:
-            response = client.models.generate_content(
+            response = client.chat.completions(
                 model=MODEL_NAME,
-                contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_schema": SchemeAnalysis,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": SYSTEM_PROMPT,
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                temperature=0.2,
+                reasoning_effort=None,
+                max_tokens=4096,
+                request_options={
+                    "additional_body_parameters": {
+                        "response_format": {
+                            "type": "json_schema",
+                            "json_schema": {
+                                "name": "scheme_analysis",
+                                "description": "Structured SchemeSarthi scheme analysis",
+                                "schema": schema,
+                                "strict": True,
+                            },
+                        }
+                    }
                 },
             )
 
-            return SchemeAnalysis.model_validate_json(response.text)
+            raw_content = response.choices[0].message.content
+
+            parsed = json.loads(raw_content)
+
+            return SchemeAnalysis.model_validate(parsed)
 
         except Exception as error:
             error_message = str(error)
-            print("GEMINI ERROR:", repr(error))
 
-            if (
-                ("503" in error_message or "UNAVAILABLE" in error_message)
-                and attempt < max_retries
-            ):
-                time.sleep(2)
+            print("SARVAM ERROR:", repr(error))
+
+            if attempt < 2:
+                time.sleep(2 ** attempt)
                 continue
 
             raise RuntimeError(
